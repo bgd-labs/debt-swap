@@ -5,7 +5,7 @@ import {PercentageMath} from '@aave/core-v3/contracts/protocol/libraries/math/Pe
 import {IPoolAddressesProvider} from '@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol';
 import {IERC20Detailed} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/IERC20Detailed.sol';
 import {SafeERC20} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/SafeERC20.sol';
-import {IParaSwapAugustus} from '../dependencies/paraswap/IParaSwapAugustus.sol';
+import {SafeMath} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/SafeMath.sol';
 import {IParaSwapAugustusRegistry} from '../dependencies/paraswap/IParaSwapAugustusRegistry.sol';
 import {BaseParaSwapAdapter} from './BaseParaSwapAdapter.sol';
 
@@ -14,8 +14,9 @@ import {BaseParaSwapAdapter} from './BaseParaSwapAdapter.sol';
  * @notice Implements logic for selling an asset using ParaSwap (exact-in swap)
  */
 abstract contract BaseParaSwapSellAdapter is BaseParaSwapAdapter {
-  using SafeERC20 for IERC20Detailed;
   using PercentageMath for uint256;
+  using SafeMath for uint256;
+  using SafeERC20 for IERC20Detailed;
 
   /// @notice The address of the Paraswap Augustus Registry
   IParaSwapAugustusRegistry public immutable AUGUSTUS_REGISTRY;
@@ -55,11 +56,9 @@ abstract contract BaseParaSwapSellAdapter is BaseParaSwapAdapter {
     uint256 amountToSwap,
     uint256 minAmountToReceive
   ) internal returns (uint256 amountReceived) {
-    (bytes memory swapCalldata, IParaSwapAugustus augustus) = abi.decode(
-      paraswapData,
-      (bytes, IParaSwapAugustus)
-    );
-    require(AUGUSTUS_REGISTRY.isValidAugustus(address(augustus)), 'INVALID_AUGUSTUS');
+    (bytes memory swapCalldata, address augustus) = abi.decode(paraswapData, (bytes, address));
+
+    require(AUGUSTUS_REGISTRY.isValidAugustus(augustus), 'INVALID_AUGUSTUS');
 
     {
       uint256 fromAssetDecimals = _getDecimals(assetToSwapFrom);
@@ -68,32 +67,26 @@ abstract contract BaseParaSwapSellAdapter is BaseParaSwapAdapter {
       uint256 fromAssetPrice = _getPrice(address(assetToSwapFrom));
       uint256 toAssetPrice = _getPrice(address(assetToSwapTo));
 
-      uint256 expectedMinAmountOut = ((amountToSwap * (fromAssetPrice * (10 ** toAssetDecimals))) /
-        (toAssetPrice * (10 ** fromAssetDecimals))).percentMul(
-          PercentageMath.PERCENTAGE_FACTOR - MAX_SLIPPAGE_PERCENT
-        );
+      uint256 expectedMinAmountOut = amountToSwap
+        .mul(fromAssetPrice.mul(10 ** toAssetDecimals))
+        .div(toAssetPrice.mul(10 ** fromAssetDecimals))
+        .percentMul(PercentageMath.PERCENTAGE_FACTOR - MAX_SLIPPAGE_PERCENT);
 
       // Sanity check for `minAmountToReceive` to ensure it is within slippage bounds
-      require(
-        expectedMinAmountOut <= minAmountToReceive,
-        'minAmountToReceive exceeds max slippage'
-      );
+      require(expectedMinAmountOut <= minAmountToReceive, 'MIN_AMOUNT_EXCEEDS_MAX_SLIPPAGE');
     }
 
     uint256 balanceBeforeAssetFrom = assetToSwapFrom.balanceOf(address(this));
     require(balanceBeforeAssetFrom >= amountToSwap, 'INSUFFICIENT_BALANCE_BEFORE_SWAP');
-
     uint256 balanceBeforeAssetTo = assetToSwapTo.balanceOf(address(this));
 
-    address tokenTransferProxy = augustus.getTokenTransferProxy();
-    assetToSwapFrom.safeApprove(tokenTransferProxy, 0);
-    assetToSwapFrom.safeApprove(tokenTransferProxy, amountToSwap);
+    assetToSwapFrom.safeApprove(augustus, amountToSwap);
 
     if (fromAmountOffset != 0) {
       // Ensure 256 bit (32 bytes) fromAmountOffset value is within bounds of the
       // calldata, not overlapping with the first 4 bytes (function selector).
       require(
-        fromAmountOffset >= 4 && fromAmountOffset <= swapCalldata.length - 32,
+        fromAmountOffset >= 4 && fromAmountOffset <= swapCalldata.length.sub(32),
         'FROM_AMOUNT_OFFSET_OUT_OF_RANGE'
       );
       // Overwrite the fromAmount with the correct amount for the swap.
@@ -103,7 +96,7 @@ abstract contract BaseParaSwapSellAdapter is BaseParaSwapAdapter {
         mstore(add(swapCalldata, add(fromAmountOffset, 32)), amountToSwap)
       }
     }
-    (bool success, ) = address(augustus).call(swapCalldata);
+    (bool success, ) = augustus.call(swapCalldata);
     if (!success) {
       // Copy revert reason from call
       assembly {
@@ -112,14 +105,16 @@ abstract contract BaseParaSwapSellAdapter is BaseParaSwapAdapter {
       }
     }
 
-    // Amount provided should be equal (or even less) than `amountToSwap`
-    uint256 amountSold = balanceBeforeAssetFrom - assetToSwapFrom.balanceOf(address(this));
-    require(amountToSwap <= amountSold, 'WRONG_BALANCE_AFTER_SWAP');
+    // Reset allowance
+    assetToSwapFrom.safeApprove(augustus, 0);
 
-    // Amount received should be higher or equal `minAmountToReceive`
-    amountReceived = assetToSwapTo.balanceOf(address(this)) - balanceBeforeAssetTo;
+    require(
+      assetToSwapFrom.balanceOf(address(this)) == balanceBeforeAssetFrom.sub(amountToSwap),
+      'WRONG_BALANCE_AFTER_SWAP'
+    );
+    amountReceived = assetToSwapTo.balanceOf(address(this)).sub(balanceBeforeAssetTo);
     require(amountReceived >= minAmountToReceive, 'INSUFFICIENT_AMOUNT_RECEIVED');
 
-    emit Swapped(address(assetToSwapFrom), address(assetToSwapTo), amountSold, amountReceived);
+    emit Swapped(address(assetToSwapFrom), address(assetToSwapTo), amountToSwap, amountReceived);
   }
 }

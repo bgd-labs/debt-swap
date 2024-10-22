@@ -9,7 +9,6 @@ import {ReentrancyGuard} from 'aave-v3-periphery/contracts/dependencies/openzepp
 import {IERC20} from 'solidity-utils/contracts/oz-common/interfaces/IERC20.sol';
 import {SafeERC20} from 'solidity-utils/contracts/oz-common/SafeERC20.sol';
 import {IParaSwapAugustusRegistry} from '../dependencies/paraswap/IParaSwapAugustusRegistry.sol';
-import {IParaSwapAugustus} from '../dependencies/paraswap/IParaSwapAugustus.sol';
 import {IAaveFlashLoanReceiver} from '../interfaces/IAaveFlashLoanReceiver.sol';
 import {IParaSwapRepayAdapter} from '../interfaces/IParaSwapRepayAdapter.sol';
 import {BaseParaSwapBuyAdapter} from './BaseParaSwapBuyAdapter.sol';
