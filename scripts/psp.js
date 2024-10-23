@@ -121,10 +121,16 @@ async function main(from, to, method, amount, user) {
     return;
   }
   // distinguish between exactOut and exactInoutdMethod
+  /*
   const excludedMethod =
     method === "SELL"
       ? [ContractMethod.simpleSwap]
       : [ContractMethod.simpleBuy, ContractMethod.directUniV3Buy];
+      */
+  const includedMethods =
+    method === "SELL"
+      ? [ContractMethod.swapExactAmountIn]
+      : [ContractMethod.swapExactAmountOut];
   const priceRoute = await paraSwapMin.swap.getRate({
     srcToken: from,
     srcDecimals: FROM_DECIMALS,
@@ -132,10 +138,11 @@ async function main(from, to, method, amount, user) {
     destDecimals: TO_DECIMALS,
     amount: amount,
     side: method,
+    version: 6.2,
     ...(MAX
       ? {
           options: {
-            excludeContractMethods: [...excludedMethod],
+            includeContractMethods: [...includedMethods],
           },
         }
       : {}),
