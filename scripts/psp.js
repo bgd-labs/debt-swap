@@ -28,7 +28,11 @@ const TO_DECIMALS = Number(args[9]);
 // generate a hash for input parameters to cache response and not spam psp sdk
 const hash = objectHash(args);
 
-const paraSwapMin = constructSimpleSDK({ chainId: CHAIN_ID, axios });
+const paraSwapMin = constructSimpleSDK({
+  chainId: CHAIN_ID,
+  axios,
+  version: "6.2",
+});
 
 // https://github.com/aave/aave-utilities/blob/master/packages/contract-helpers/src/paraswap-liquiditySwapAdapter-contract/index.ts#L19
 function augustusFromAmountOffsetFromCalldata(calldata) {
@@ -138,7 +142,8 @@ async function main(from, to, method, amount, user) {
     destDecimals: TO_DECIMALS,
     amount: amount,
     side: method,
-    version: 6.2,
+    userAddress: user,
+    version: "6.2",
     ...(MAX
       ? {
           options: {
@@ -175,6 +180,8 @@ async function main(from, to, method, amount, user) {
       priceRoute,
       userAddress: user,
       partner: "aave",
+      isDirectFeeTransfer: true,
+      takeSurplus: true,
     },
     { ignoreChecks: true }
   );

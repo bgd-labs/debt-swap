@@ -60,8 +60,8 @@ contract DebtSwapV2Test is BaseTest {
   function test_revert_debtSwap_without_extra_collateral() public {
     address aToken = AaveV2EthereumAssets.DAI_A_TOKEN;
     address debtAsset = AaveV2EthereumAssets.DAI_UNDERLYING;
-    address newDebtAsset = AaveV2EthereumAssets.LUSD_UNDERLYING;
-    address newDebtToken = AaveV2EthereumAssets.LUSD_V_TOKEN;
+    address newDebtAsset = AaveV2EthereumAssets.USDC_UNDERLYING;
+    address newDebtToken = AaveV2EthereumAssets.USDC_V_TOKEN;
 
     uint256 supplyAmount = 120e18;
     uint256 borrowAmount = 80e18;
@@ -122,17 +122,17 @@ contract DebtSwapV2Test is BaseTest {
   /**
    * 1. supply 200000 DAI
    * 2. borrow 1000 DAI
-   * 3. swap whole DAI debt to LUSD debt
+   * 3. swap whole DAI debt to USDC debt
    */
   function test_debtSwap_swapHalf() public {
     vm.startPrank(user);
     address debtAsset = AaveV2EthereumAssets.DAI_UNDERLYING;
     address debtToken = AaveV2EthereumAssets.DAI_V_TOKEN;
-    address newDebtAsset = AaveV2EthereumAssets.LUSD_UNDERLYING;
-    address newDebtToken = AaveV2EthereumAssets.LUSD_V_TOKEN;
+    address newDebtAsset = AaveV2EthereumAssets.USDC_UNDERLYING;
+    address newDebtToken = AaveV2EthereumAssets.USDC_V_TOKEN;
 
     uint256 supplyAmount = 200000 ether;
-    uint256 borrowAmount = 1000 ether;
+    uint256 borrowAmount = 10 ether;
 
     _supply(AaveV2Ethereum.POOL, supplyAmount, debtAsset);
     _borrow(AaveV2Ethereum.POOL, borrowAmount, debtAsset);
@@ -180,11 +180,11 @@ contract DebtSwapV2Test is BaseTest {
     vm.startPrank(user);
     address debtAsset = AaveV2EthereumAssets.DAI_UNDERLYING;
     address debtToken = AaveV2EthereumAssets.DAI_V_TOKEN;
-    address newDebtAsset = AaveV2EthereumAssets.LUSD_UNDERLYING;
-    address newDebtToken = AaveV2EthereumAssets.LUSD_V_TOKEN;
+    address newDebtAsset = AaveV2EthereumAssets.USDC_UNDERLYING;
+    address newDebtToken = AaveV2EthereumAssets.USDC_V_TOKEN;
 
     uint256 supplyAmount = 200000 ether;
-    uint256 borrowAmount = 1000 ether;
+    uint256 borrowAmount = 10 ether;
 
     _supply(AaveV2Ethereum.POOL, supplyAmount, debtAsset);
     _borrow(AaveV2Ethereum.POOL, borrowAmount, debtAsset);
@@ -281,8 +281,8 @@ contract DebtSwapV2Test is BaseTest {
 
   function test_debtSwap_extra_Collateral() public {
     address debtAsset = AaveV2EthereumAssets.DAI_UNDERLYING;
-    address newDebtAsset = AaveV2EthereumAssets.LUSD_UNDERLYING;
-    address newDebtToken = AaveV2EthereumAssets.LUSD_V_TOKEN;
+    address newDebtAsset = AaveV2EthereumAssets.USDC_UNDERLYING;
+    address newDebtToken = AaveV2EthereumAssets.USDC_V_TOKEN;
     address extraCollateralAsset = debtAsset;
     address extraCollateralAToken = AaveV2EthereumAssets.DAI_A_TOKEN;
 
@@ -347,8 +347,8 @@ contract DebtSwapV2Test is BaseTest {
 
   function test_debtSwap_extra_Collateral_permit() public {
     address debtAsset = AaveV2EthereumAssets.DAI_UNDERLYING;
-    address newDebtAsset = AaveV2EthereumAssets.LUSD_UNDERLYING;
-    address newDebtToken = AaveV2EthereumAssets.LUSD_V_TOKEN;
+    address newDebtAsset = AaveV2EthereumAssets.USDC_UNDERLYING;
+    address newDebtToken = AaveV2EthereumAssets.USDC_V_TOKEN;
     address extraCollateralAsset = debtAsset;
     address extraCollateralAToken = AaveV2EthereumAssets.DAI_A_TOKEN;
 
