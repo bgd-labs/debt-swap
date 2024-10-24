@@ -229,15 +229,15 @@ contract DebtSwapV2Test is BaseTest {
     _invariant(address(debtSwapAdapter), debtAsset, newDebtAsset);
   }
 
-  function test_debtSwap_swapAll_BUSD() public {
-    address vBUSD_WHALE = 0x154AF3A2071363D3fFcDB43744C2a906d8EB856a;
-    vm.startPrank(vBUSD_WHALE); // vBUSD Whale
-    address debtAsset = AaveV2EthereumAssets.BUSD_UNDERLYING;
-    address debtToken = AaveV2EthereumAssets.BUSD_V_TOKEN;
+  function test_debtSwap_swapAll_USDC() public {
+    address vUSDC_WHALE = 0xd262b944e2EfFcA0855C43023D3f1843B0Ee6fB1;
+    vm.startPrank(vUSDC_WHALE); // vUSDC Whale
+    address debtAsset = AaveV2EthereumAssets.USDC_UNDERLYING;
+    address debtToken = AaveV2EthereumAssets.USDC_V_TOKEN;
     address newDebtAsset = AaveV2EthereumAssets.DAI_UNDERLYING;
     address newDebtToken = AaveV2EthereumAssets.DAI_V_TOKEN;
 
-    uint256 borrowAmount = IERC20Detailed(debtToken).balanceOf(vBUSD_WHALE);
+    uint256 borrowAmount = IERC20Detailed(debtToken).balanceOf(vUSDC_WHALE);
 
     // add some margin to account for accumulated debt
     uint256 repayAmount = (borrowAmount * 101) / 100;
@@ -245,7 +245,7 @@ contract DebtSwapV2Test is BaseTest {
       newDebtAsset,
       debtAsset,
       repayAmount,
-      vBUSD_WHALE,
+      vUSDC_WHALE,
       false,
       true
     );
@@ -272,8 +272,8 @@ contract DebtSwapV2Test is BaseTest {
 
     debtSwapAdapter.swapDebt(debtSwapParams, cd, collateralATokenPermit);
 
-    uint256 vDEBT_TOKENBalanceAfter = IERC20Detailed(debtToken).balanceOf(vBUSD_WHALE);
-    uint256 vNEWDEBT_TOKENBalanceAfter = IERC20Detailed(newDebtToken).balanceOf(vBUSD_WHALE);
+    uint256 vDEBT_TOKENBalanceAfter = IERC20Detailed(debtToken).balanceOf(vUSDC_WHALE);
+    uint256 vNEWDEBT_TOKENBalanceAfter = IERC20Detailed(newDebtToken).balanceOf(vUSDC_WHALE);
     assertEq(vDEBT_TOKENBalanceAfter, 0);
     assertLe(vNEWDEBT_TOKENBalanceAfter, psp.srcAmount);
     _invariant(address(debtSwapAdapter), debtAsset, newDebtAsset);
