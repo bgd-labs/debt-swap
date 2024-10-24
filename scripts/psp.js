@@ -125,12 +125,6 @@ async function main(from, to, method, amount, user) {
     return;
   }
   // distinguish between exactOut and exactInoutdMethod
-  /*
-  const excludedMethod =
-    method === "SELL"
-      ? [ContractMethod.simpleSwap]
-      : [ContractMethod.simpleBuy, ContractMethod.directUniV3Buy];
-      */
   const includedMethods =
     method === "SELL"
       ? [ContractMethod.swapExactAmountIn]
