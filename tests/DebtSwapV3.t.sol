@@ -364,18 +364,18 @@ contract DebtSwapV3Test is BaseTest {
   }
 
   function test_debtSwap_extra_Collateral() public {
-    address debtAsset = AaveV3EthereumAssets.DAI_UNDERLYING;
-    address newDebtAsset = AaveV3EthereumAssets.LUSD_UNDERLYING;
-    address newDebtToken = AaveV3EthereumAssets.LUSD_V_TOKEN;
+    address debtAsset = AaveV3EthereumAssets.WETH_UNDERLYING;
+    address newDebtAsset = AaveV3EthereumAssets.DAI_UNDERLYING;
+    address newDebtToken = AaveV3EthereumAssets.DAI_V_TOKEN;
     address extraCollateralAsset = debtAsset;
-    address extraCollateralAToken = AaveV3EthereumAssets.DAI_A_TOKEN;
+    address extraCollateralAToken = AaveV3EthereumAssets.WETH_A_TOKEN;
 
-    uint256 supplyAmount = 120e18;
-    uint256 borrowAmount = 80e18;
-    uint256 extraCollateralAmount = 1000e18;
+    uint256 supplyAmount = 12e18;
+    uint256 borrowAmount = 8e18;
+    uint256 extraCollateralAmount = 100e18;
 
-    // We want to end with LT > utilisation > LTV, so we pump up the utilisation to 75% by withdrawing (80 > 75 > 67).
-    uint256 withdrawAmount = supplyAmount - (borrowAmount * 100) / 75;
+    // We want to end with LT > utilisation > LTV, so we pump up the utilisation to 81% by withdrawing (83 > 81 > 80.5).
+    uint256 withdrawAmount = supplyAmount - (borrowAmount * 100) / 81;
 
     // Deal some debtAsset to cover the premium and any 1 wei rounding errors on withdrawal.
     deal(debtAsset, address(debtSwapAdapter), 1e18);
@@ -430,18 +430,18 @@ contract DebtSwapV3Test is BaseTest {
   }
 
   function test_debtSwap_extra_Collateral_permit() public {
-    address debtAsset = AaveV3EthereumAssets.DAI_UNDERLYING;
-    address newDebtAsset = AaveV3EthereumAssets.LUSD_UNDERLYING;
-    address newDebtToken = AaveV3EthereumAssets.LUSD_V_TOKEN;
+    address debtAsset = AaveV3EthereumAssets.WETH_UNDERLYING;
+    address newDebtAsset = AaveV3EthereumAssets.DAI_UNDERLYING;
+    address newDebtToken = AaveV3EthereumAssets.DAI_V_TOKEN;
     address extraCollateralAsset = debtAsset;
-    address extraCollateralAToken = AaveV3EthereumAssets.DAI_A_TOKEN;
+    address extraCollateralAToken = AaveV3EthereumAssets.WETH_A_TOKEN;
 
-    uint256 supplyAmount = 120e18;
-    uint256 borrowAmount = 80e18;
-    uint256 extraCollateralAmount = 1000e18;
+    uint256 supplyAmount = 12e18;
+    uint256 borrowAmount = 8e18;
+    uint256 extraCollateralAmount = 100e18;
 
-    // We want to end with LT > utilisation > LTV, so we pump up the utilisation to 75% by withdrawing (80 > 75 > 67).
-    uint256 withdrawAmount = supplyAmount - (borrowAmount * 100) / 75;
+    // We want to end with LT > utilisation > LTV, so we pump up the utilisation to 81% by withdrawing (83 > 81 > 80.5).
+    uint256 withdrawAmount = supplyAmount - (borrowAmount * 100) / 81;
 
     // Deal some debtAsset to cover the premium and any 1 wei rounding errors on withdrawal.
     deal(debtAsset, address(debtSwapAdapter), 1e18);
