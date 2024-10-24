@@ -280,18 +280,18 @@ contract DebtSwapV2Test is BaseTest {
   }
 
   function test_debtSwap_extra_Collateral() public {
-    address debtAsset = AaveV2EthereumAssets.DAI_UNDERLYING;
-    address newDebtAsset = AaveV2EthereumAssets.USDC_UNDERLYING;
-    address newDebtToken = AaveV2EthereumAssets.USDC_V_TOKEN;
+    address debtAsset = AaveV2EthereumAssets.WETH_UNDERLYING;
+    address newDebtAsset = AaveV2EthereumAssets.DAI_UNDERLYING;
+    address newDebtToken = AaveV2EthereumAssets.DAI_V_TOKEN;
     address extraCollateralAsset = debtAsset;
-    address extraCollateralAToken = AaveV2EthereumAssets.DAI_A_TOKEN;
+    address extraCollateralAToken = AaveV2EthereumAssets.WETH_A_TOKEN;
 
-    uint256 supplyAmount = 120e18;
-    uint256 borrowAmount = 80e18;
-    uint256 extraCollateralAmount = 1000e18;
+    uint256 supplyAmount = 12e18;
+    uint256 borrowAmount = 8e18;
+    uint256 extraCollateralAmount = 100e18;
 
-    // We want to end with LT > utilisation > LTV, so we pump up the utilisation to 75% by withdrawing (80 > 75 > 67).
-    uint256 withdrawAmount = supplyAmount - (borrowAmount * 100) / 75;
+    // We want to end with LT > utilisation > LTV, so we pump up the utilisation to 83% by withdrawing (86 > 83 > 82.5).
+    uint256 withdrawAmount = supplyAmount - (borrowAmount * 100) / 83;
 
     // Deal some debtAsset to cover the premium and any 1 wei rounding errors on withdrawal.
     deal(debtAsset, address(debtSwapAdapter), 1e18);
