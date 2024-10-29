@@ -7,6 +7,7 @@ libs = ['lib']
 remappings = [
 ]
 ffi = true
+evm_version = "cancun"
 
 [rpc_endpoints]
 mainnet = "${RPC_MAINNET}"

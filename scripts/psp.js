@@ -28,7 +28,10 @@ const TO_DECIMALS = Number(args[9]);
 // generate a hash for input parameters to cache response and not spam psp sdk
 const hash = objectHash(args);
 
-const paraSwapMin = constructSimpleSDK({ chainId: CHAIN_ID, axios });
+const paraSwapMin = constructSimpleSDK({
+  chainId: CHAIN_ID,
+  axios,
+});
 
 // https://github.com/aave/aave-utilities/blob/master/packages/contract-helpers/src/paraswap-liquiditySwapAdapter-contract/index.ts#L19
 function augustusFromAmountOffsetFromCalldata(calldata) {
@@ -55,16 +58,29 @@ function augustusFromAmountOffsetFromCalldata(calldata) {
       return 68; // 4 + 2 * 32
     case "0x46c67b6d": // Augustus V5 megaSwap
       return 68; // 4 + 2 * 32
-    case "0xb22f4db8": // directBalancerV2GivenInSwap
+    case "0xb22f4db8": // Augustus V5 directBalancerV2GivenInSwap
       return 68; // 4 + 2 * 32
-    case "0x19fc5be0": // directBalancerV2GivenOutSwap
+    case "0x19fc5be0": // Augustus V5 directBalancerV2GivenOutSwap
       return 68; // 4 + 2 * 32
-    case "0x3865bde6": // directCurveV1Swap
+    case "0x3865bde6": // Augustus V5 directCurveV1Swap
       return 68; // 4 + 2 * 32
-    case "0x58f15100": // directCurveV2Swap
+    case "0x58f15100": // Augustus V5 directCurveV2Swap
       return 68; // 4 + 2 * 32
-    case "0xa6866da9": // directUniV3Swap
+    case "0xa6866da9": // Augustus V5 directUniV3Swap
       return 68; // 4 + 2 * 32
+    case "0xe3ead59e": // Augustus V6 swapExactAmountIn
+      return 100; // 4 + 3 * 32
+    case "0xd85ca173": // Augustus V6 swapExactAmountInOnBalancerV2
+      return 4; // 4 + 0 * 32
+    case "0x1a01c532": // Augustus V6 swapExactAmountInOnCurveV1
+      return 132; // 4 + 4 * 32
+    case "0xe37ed256": // Augustus V6 swapExactAmountInOnCurveV2
+      return 196; // 4 + 6 * 32
+    case "0xe8bb3b6c": // Augustus V6 swapExactAmountInOnUniswapV2
+      return 164; // 4 + 4 * 32
+    case "0x876a02f6": // Augustus V6 swapExactAmountInOnUniswapV3
+      return 164; // 4 + 4 * 32
+    case "0x987e7d8e": // Augustus V6 swapExactAmountInOutOnMakerPSM
     default:
       throw new Error("Unrecognized function selector for Augustus");
   }
@@ -82,8 +98,18 @@ const augustusToAmountOffsetFromCalldata = (calldata) => {
     case "0xb66bcbac": // Augustus V5 buy (old)
     case "0x35326910": // Augustus V5 buy
       return 164; // 4 + 5 * 32
-    case "0x87a63926": // directUniV3Buy
+    case "0x87a63926": // Augustus V5 directUniV3Buy
       return 68; // 4 + 2 * 32
+    case "0x7f457675": // Augustus V6 swapExactAmountOut
+      return 132; // 4 + 4 * 32
+    case "0xd6ed22e6": // Augustus V6 swapExactAmountOutOnBalancerV2
+      return 36; // 4 + 1 * 32
+    case "0xa76f4eb6": // Augustus V6 swapExactAmountOutOnUniswapV2
+      return 196; // 4 + 6 * 32
+    case "0x5e94e28d": // Augustus V6 swapExactAmountOutOnUniswapV3
+      return 196; // 4 + 6 * 32
+    case "0x987e7d8e": // Augustus V6 swapExactAmountInOutOnMakerPSM
+      return 100; // 4 + 3 * 32
     default:
       throw new Error("Unrecognized function selector for Augustus");
   }
@@ -98,10 +124,10 @@ async function main(from, to, method, amount, user) {
     return;
   }
   // distinguish between exactOut and exactInoutdMethod
-  const excludedMethod =
+  const includedMethods =
     method === "SELL"
-      ? [ContractMethod.simpleSwap]
-      : [ContractMethod.simpleBuy, ContractMethod.directUniV3Buy];
+      ? [ContractMethod.swapExactAmountIn]
+      : [ContractMethod.swapExactAmountOut];
   const priceRoute = await paraSwapMin.swap.getRate({
     srcToken: from,
     srcDecimals: FROM_DECIMALS,
@@ -112,7 +138,7 @@ async function main(from, to, method, amount, user) {
     ...(MAX
       ? {
           options: {
-            excludeContractMethods: [...excludedMethod],
+            includeContractMethods: [...includedMethods],
           },
         }
       : {}),

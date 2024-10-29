@@ -5,7 +5,6 @@ import {PercentageMath} from '@aave/core-v3/contracts/protocol/libraries/math/Pe
 import {IPoolAddressesProvider} from '@aave/core-v3/contracts/interfaces/IPoolAddressesProvider.sol';
 import {IERC20Detailed} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/IERC20Detailed.sol';
 import {SafeERC20} from '@aave/core-v3/contracts/dependencies/openzeppelin/contracts/SafeERC20.sol';
-import {IParaSwapAugustus} from '../interfaces/IParaSwapAugustus.sol';
 import {IParaSwapAugustusRegistry} from '../interfaces/IParaSwapAugustusRegistry.sol';
 import {BaseParaSwapAdapter} from './BaseParaSwapAdapter.sol';
 
@@ -14,8 +13,8 @@ import {BaseParaSwapAdapter} from './BaseParaSwapAdapter.sol';
  * @notice Implements the logic for buying tokens on ParaSwap
  */
 abstract contract BaseParaSwapBuyAdapter is BaseParaSwapAdapter {
-  using SafeERC20 for IERC20Detailed;
   using PercentageMath for uint256;
+  using SafeERC20 for IERC20Detailed;
 
   IParaSwapAugustusRegistry public immutable AUGUSTUS_REGISTRY;
 
@@ -48,12 +47,8 @@ abstract contract BaseParaSwapBuyAdapter is BaseParaSwapAdapter {
     uint256 maxAmountToSwap,
     uint256 amountToReceive
   ) internal returns (uint256 amountSold, uint256 amountBought) {
-    (bytes memory buyCalldata, IParaSwapAugustus augustus) = abi.decode(
-      paraswapData,
-      (bytes, IParaSwapAugustus)
-    );
-
-    require(AUGUSTUS_REGISTRY.isValidAugustus(address(augustus)), 'INVALID_AUGUSTUS');
+    (bytes memory buyCalldata, address augustus) = abi.decode(paraswapData, (bytes, address));
+    require(AUGUSTUS_REGISTRY.isValidAugustus(augustus), 'INVALID_AUGUSTUS');
 
     {
       uint256 fromAssetDecimals = _getDecimals(assetToSwapFrom);
@@ -73,8 +68,7 @@ abstract contract BaseParaSwapBuyAdapter is BaseParaSwapAdapter {
     require(balanceBeforeAssetFrom >= maxAmountToSwap, 'INSUFFICIENT_BALANCE_BEFORE_SWAP');
     uint256 balanceBeforeAssetTo = assetToSwapTo.balanceOf(address(this));
 
-    address tokenTransferProxy = augustus.getTokenTransferProxy();
-    assetToSwapFrom.safeApprove(tokenTransferProxy, maxAmountToSwap);
+    assetToSwapFrom.safeApprove(augustus, maxAmountToSwap);
 
     if (toAmountOffset != 0) {
       // Ensure 256 bit (32 bytes) toAmountOffset value is within bounds of the
@@ -90,7 +84,7 @@ abstract contract BaseParaSwapBuyAdapter is BaseParaSwapAdapter {
         mstore(add(buyCalldata, add(toAmountOffset, 32)), amountToReceive)
       }
     }
-    (bool success, ) = address(augustus).call(buyCalldata);
+    (bool success, ) = augustus.call(buyCalldata);
     if (!success) {
       // Copy revert reason from call
       assembly {
@@ -99,7 +93,7 @@ abstract contract BaseParaSwapBuyAdapter is BaseParaSwapAdapter {
       }
     }
     // Reset allowance
-    assetToSwapFrom.safeApprove(tokenTransferProxy, 0);
+    assetToSwapFrom.safeApprove(augustus, 0);
 
     uint256 balanceAfterAssetFrom = assetToSwapFrom.balanceOf(address(this));
     amountSold = balanceBeforeAssetFrom - balanceAfterAssetFrom;
